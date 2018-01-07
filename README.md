@@ -1,5 +1,8 @@
-# Tensorflow-ResNet50
+Cross-Age Face Recognition Using ResNet50  
+====
 Trainable ResNet50 using Python3.5 + Tensorflow
+DataSet: Cross-Age Celebrity Dataset[(CACD)](http://bcsiriuschen.github.io/CARC/)
+
 
 1. ResNet50 Class is defined in ResNet.py
 2. Some useful functions are defined in utils.py
