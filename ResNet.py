@@ -76,7 +76,7 @@ class ResNet:
 
         self.pool2 = self.avg_pool(self.block4_3, 7, 1, "pool2")
 
-        self.fc1 = self.fc_layer(self.pool2, 2048, label_num, "fc200")
+        self.fc1 = self.fc_layer(self.pool2, 2048, label_num, "fc1200")
 
         if(last_layer_type == "sigmoid"):
             self.prob = tf.nn.sigmoid(self.fc1, name="prob")
