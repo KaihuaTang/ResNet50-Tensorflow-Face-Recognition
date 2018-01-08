@@ -11,6 +11,7 @@ import math
 import random
 
 # image path
+parentPath = "F:\\CACD2000_Crop\\"
 tripletIndex = "F:\\CACDLabel\\"
 
 def triplet_loss(anchor, positive, negative, alpha):
@@ -24,10 +25,11 @@ def triplet_loss(anchor, positive, negative, alpha):
     Returns:
       the triplet loss according to the FaceNet paper as a float tensor.
     """
-    pos_dist = tf.reduce_sum(tf.square(tf.subtract(anchor, positive)))
-    neg_dist = tf.reduce_sum(tf.square(tf.subtract(anchor, negative)))
+    pos_dist = tf.reduce_sum(tf.square(tf.subtract(anchor, positive)), 1)
+    neg_dist = tf.reduce_sum(tf.square(tf.subtract(anchor, negative)), 1)
+        
     basic_loss = tf.add(tf.subtract(pos_dist,neg_dist), alpha)
-    loss = tf.reduce_mean(tf.maximum(basic_loss, 0.0))
+    loss = tf.maximum(basic_loss, 0.0)
     return loss
 
 def get_traindata_dictionary(identity, age, path):
@@ -45,7 +47,21 @@ def get_traindata_dictionary(identity, age, path):
 	np.save("./newLossDic.npy",all_data)
 	return all_data
 
-def get_newloss_minibatches(num_identity, num_age, allNameIndex, h, w, c, ancher, permutation, age_permutation, parentPath):
+def get_cacl_minibatches(indexList, num_age, parentPath, total_identity, allNameIndex, w, h, c):
+	m_size = len(indexList)
+	batch = np.ndarray([m_size * 2 * num_age, h, w, c])
+	age_permutation = list(np.random.permutation(10))
+	for i in range(m_size):
+		anti_ancher_list = get_anchor_diff(indexList[i], num_age, total_identity)
+		for j in range(num_age):
+			same_name = parentPath + random.choice(allNameIndex[(indexList[i],age_permutation[j])])
+			diff_name = parentPath + random.choice(allNameIndex[anti_ancher_list[j], random.randint(0, 9)])
+			batch[i*2*num_age + j, :, :, :] = load_images(same_name)
+			batch[i*2*num_age + num_age + j, :, :, :] = load_images(diff_name)
+
+	return batch
+
+def get_newloss_minibatches(num_identity, num_age, allNameIndex, h, w, c, ancher, permutation, age_permutation):
 	#print("Ancher Identity is: " + str(ancher))
 	batch_same = {}
 	batch_diff = {}
@@ -53,7 +69,7 @@ def get_newloss_minibatches(num_identity, num_age, allNameIndex, h, w, c, ancher
 		batch_same[i] = np.ndarray([1, h, w, c])
 		batch_diff[i] = np.ndarray([1, h, w, c])
 
-	anti_ancher_list = get_anchor_diff(ancher, num_age, num_identity, permutation)
+	anti_ancher_list = get_anchor_diff(ancher, num_age, permutation)
 	for i in range(num_age):
 		batch_same[i][0,:,:,:] = load_images(parentPath + random.choice(allNameIndex[(ancher,age_permutation[i])]))
 		batch_diff[i][0,:,:,:] = load_images(parentPath + random.choice(allNameIndex[(anti_ancher_list[i],random.randint(0, 9))]))
@@ -62,11 +78,11 @@ def get_newloss_minibatches(num_identity, num_age, allNameIndex, h, w, c, ancher
 
 		
 
-def get_anchor_diff(ancher, num_age, num_identity, permutation):
+def get_anchor_diff(ancher, num_age, total_identity):
 	count = 0
 	result = []
 	while count < num_age:
-		t = random.choice(permutation)
+		t = random.randint(0, total_identity - 1)
 		if ((not (t in result)) and (t != ancher)):
 			result.append(t)
 			count += 1
@@ -99,7 +115,7 @@ def random_mini_batches(totalSize, mini_batch_size = 64, random = True):
     
 	return mini_batches
 
-def load_all_image(nameList, h, w, c, parentPath):
+def load_all_image(nameList, h, w, c):
 	all_size = len(nameList)
 	all_data = np.zeros((all_size, h, w, c), dtype = "uint8")
 	for i in range(all_size):
