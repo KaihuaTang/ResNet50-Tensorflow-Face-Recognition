@@ -32,7 +32,7 @@ def CalculateFeature():
     model_path: The model we use
     feature_path: The path to save feature
     """
-    model_path = "./model/11.npy"
+    model_path = "./model/03.npy"
     feature_path = "./resnet_feature.mat"
 
     #Lists that store name of image and its label
