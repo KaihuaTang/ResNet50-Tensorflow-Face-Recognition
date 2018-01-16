@@ -3,7 +3,8 @@ Cross-Age Face Recognition Using ResNet50 (unfinished)
 Trainable ResNet50 using Python3.5 + Tensorflow <br>
 DataSet: Cross-Age Celebrity Dataset[(CACD)](http://bcsiriuschen.github.io/CARC/)
 
-#####Training Part
+Training Part
+----
 1. Run TrainResNet.py
 2. Label and Image Name are loaded from "./label/label_1200.npy" and "./label/name_1200.npy"
 3. Label is range from [1, LABELSNUM]
@@ -11,7 +12,8 @@ DataSet: Cross-Age Celebrity Dataset[(CACD)](http://bcsiriuschen.github.io/CARC/
 5. Set model_path to be None, if you train a network from scratch.
 6. All trained model will be saved in ./model/XXX 
 
-#####Extract Feature Part
+Extract Feature Part
+----
 1. Run TestResNet.py
 2. Set data_path to be the model you use.
 3. The feature will be saved as .mat
