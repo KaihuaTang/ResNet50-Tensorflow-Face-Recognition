@@ -1,5 +1,5 @@
 """
-A Trainable ResNet Class is defined in this file
+A Trainable ResNet-50 Class is defined in this file
 Author: Kaihua Tang
 """
 import math
@@ -7,16 +7,13 @@ import numpy as np
 import tensorflow as tf
 from functools import reduce
 
-VGG_MEAN = [104.7546, 124.328, 167.1754]
-_BATCH_NORM_DECAY = 0.99
-_BATCH_NORM_EPSILON = 1e-12
-
 class ResNet:
-    # some properties
-    """
-    Initialize function
-    """
-    def __init__(self, ResNet_npy_path=None, trainable=True, open_tensorboard=False, dropout=0.8):
+    def __init__(self, ResNet_npy_path=None, trainable=True, open_tensorboard=False):
+        """
+        Initialize function
+        ResNet_npy_path: If path is not none, loading the model. Otherwise, initialize all parameters at random.
+        open_tensorboard: Is Open Tensorboard or not. 
+        """
         if ResNet_npy_path is not None:
             self.data_dict = np.load(ResNet_npy_path, encoding='latin1').item()
         else:
@@ -25,26 +22,29 @@ class ResNet:
         self.var_dict = {}
         self.trainable = trainable
         self.open_tensorboard = open_tensorboard
-        self.dropout = dropout
         self.is_training = True
 
     def set_is_training(self, isTrain):
+        """
+        Set is training bool.
+        """
         self.is_training = isTrain
 
-    def build(self, rgb, label_num, train_mode=None, last_layer_type = "softmax"):
+    def build(self, rgb, label_num, last_layer_type = "softmax"):
         """
         load variable from npy to build the Resnet or Generate a new one
         :param rgb: rgb image [batch, height, width, 3] values scaled [0, 1]
-        :param train_mode: a bool tensor, usually a placeholder: if True, dropout will be turned on
         """
+        # Preprocessing: Turning RGB to BGR - Mean.
+        BGR_MEAN = [104.7546, 124.328, 167.1754]
         red, green, blue = tf.split(axis=3, num_or_size_splits=3, value=rgb)
         assert red.get_shape().as_list()[1:] == [224, 224, 1]
         assert green.get_shape().as_list()[1:] == [224, 224, 1]
         assert blue.get_shape().as_list()[1:] == [224, 224, 1]
         bgr = tf.concat(axis=3, values=[
-            blue - VGG_MEAN[0],
-            green - VGG_MEAN[1],
-            red - VGG_MEAN[2],
+            blue - BGR_MEAN[0],
+            green - BGR_MEAN[1],
+            red - BGR_MEAN[2],
         ])
         print(bgr.get_shape().as_list())
         assert bgr.get_shape().as_list()[1:] == [224, 224, 3]
@@ -114,6 +114,11 @@ class ResNet:
         return relu
 
     def batch_norm(self, inputsTensor):
+        """
+        Batchnorm
+        """
+        _BATCH_NORM_DECAY = 0.99
+        _BATCH_NORM_EPSILON = 1e-12
         return tf.layers.batch_normalization(inputs=inputsTensor, axis = 3, momentum=_BATCH_NORM_DECAY, epsilon=_BATCH_NORM_EPSILON, center=True, scale=True, training=self.is_training)
 
     def avg_pool(self, bottom, kernal_size = 2, stride = 2, name = "avg"):
@@ -241,7 +246,7 @@ class ResNet:
         return var
 
 
-    def save_npy(self, sess, npy_path="./Resnet-save.npy"):
+    def save_npy(self, sess, npy_path="./model/Resnet-save.npy"):
         """
         Save this model into a npy file
         """
